@@ -1,47 +1,53 @@
-import core
-import os
 import sys
+import types
 
-# --- [ UI COLORS ] ---
-C_GREEN, C_CYAN, C_RED, C_RESET = '\033[92m', '\033[96m', '\033[91m', '\033[0m'
+# ၁။ core ကို အရင် import မလုပ်ခင် dummy function တချို့ ပြင်ဆင်မယ်
+def dummy_true(*args, **kwargs):
+    return True
 
-def bypass_run():
+# ၂။ core ကို import လုပ်မယ်
+try:
+    import core
+except ImportError:
+    print("[!] core.so ကို ရှာမတွေ့ပါ။ ဖိုင်လမ်းကြောင်း မှန်မမှန် စစ်ပါ။")
+    sys.exit()
+
+def bypass():
+    print("\033[1;36m[*] Target: Ruijie Voucher Bypass\033[1;00m")
+    print("\033[1;32m[*] Patching compiled logic...\033[1;00m")
+
+    # Cython module ထဲက variable တွေ သို့မဟုတ် function တွေကို override လုပ်မယ်
+    # အဓိကအားဖြင့် approval စစ်တတ်တဲ့ function နာမည်တွေကို အမြဲ True ပေးလိုက်တာပါ
+    target_hooks = [
+        'check_approval', 'validate_key', 'check_status', 
+        'is_registered', 'auth_check', 'verify'
+    ]
+
+    for hook in target_hooks:
+        if hasattr(core, hook):
+            setattr(core, hook, dummy_true)
+            print(f"\033[1;32m[+] Hooked: {hook}\033[1;00m")
+
+    # ပြဿနာက .so ထဲမှာ Key logic က hardcoded ဖြစ်နေရင် direct function ကိုပဲ ခေါ်ရပါမယ်
     try:
-        print(f"{C_CYAN}[*] Initializing SMNS System...{C_RESET}")
+        print("\033[1;33m[*] Attempting to trigger core bypass...\033[1;00m")
         
-        # ၁။ Device ID ကို core ထဲကနေ လှမ်းယူမယ်
-        try:
-            device_id = core.get_device_id()
-            print(f"{C_GREEN}[+] Device ID: {device_id}{C_RESET}")
-        except:
-            pass
-
-        print(f"{C_GREEN}[+] Status: Authentication Bypassed!{C_RESET}")
-        print(f"{C_CYAN}[*] Starting Core Engine...{C_RESET}")
-
-        # ၂။ core.main() ကို မခေါ်တော့ဘဲ အလုပ်လုပ်မယ့် process ကို တိုက်ရိုက်ခေါ်မယ်
-        # ပုံမှန်အားဖြင့် main process က start_process() သို့မဟုတ် execute() ဖြစ်တတ်ပါတယ်
+        # main() ကို မခေါ်ခင် လိုအပ်တဲ့ setup တွေကို လုပ်ကြည့်မယ်
+        # Ruijie tool တွေမှာ များသောအားဖြင့် start_process() သို့မဟုတ် execute() ပါတတ်ပါတယ်
         
         if hasattr(core, 'start_process'):
             core.start_process()
         elif hasattr(core, 'execute'):
             core.execute()
-        elif hasattr(core, 'start'):
-            core.start()
         else:
-            # တကယ်လို့ ဘာ function မှန်း မသေချာရင် core ထဲက ရှိသမျှ function တွေကို စစ်ဆေးပြီး
-            # Key စစ်တဲ့ function မဟုတ်တာကို ရွေး run ရပါမယ်
-            print(f"{C_RED}[!] Error: Could not find the start function in core library.{C_RESET}")
-            print(f"{C_CYAN}[i] Trying to run core.main() directly with patch...{C_RESET}")
-            
-            # core.main() ကိုပဲ ခေါ်မယ်၊ ဒါပေမဲ့ key check ကို true ဖြစ်အောင် patch လုပ်ဖို့ ကြိုးစားကြည့်မယ်
-            # (ဒါက core က python file ဖြစ်မှ ရမှာပါ)
+            # တကယ်လို့ ဘာမှမရှိရင် main() ကိုပဲ Patch လုပ်ထားတဲ့ function တွေနဲ့ run မယ်
             core.main()
-
-    except KeyboardInterrupt:
-        print(f"\n{C_RED}[!] Stopped.{C_RESET}")
+            
     except Exception as e:
-        print(f"\n{C_RED}[X] Error: {e}{C_RESET}")
+        print(f"\033[1;31m[!] Execution Error: {e}\033[1;00m")
 
 if __name__ == "__main__":
-    bypass_run()
+    try:
+        bypass()
+    except KeyboardInterrupt:
+        print("\n\033[1;31m[!] Stopped.\033[1;00m")

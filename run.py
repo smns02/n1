@@ -1,53 +1,53 @@
 import sys
-import types
+import os
 
-# ၁။ core ကို အရင် import မလုပ်ခင် dummy function တချို့ ပြင်ဆင်မယ်
-def dummy_true(*args, **kwargs):
-    return True
+# ၁။ လိုအပ်တဲ့ Library တွေကို Mock လုပ်ဖို့ ပြင်ဆင်ခြင်း
+class MockResponse:
+    def __init__(self):
+        self.status_code = 200
+        self.text = '{"status": "success", "expiry": "2099-12-31"}'
+    def json(self):
+        return {"status": "success", "expiry": "2099-12-31", "authorized": True}
 
-# ၂။ core ကို import လုပ်မယ်
+def mock_get(*args, **kwargs):
+    return MockResponse()
+
+def mock_input(*args, **kwargs):
+    return "BYPASS-KEY-12345"
+
+# ၂။ Python ရဲ့ built-in function တွေကို Override လုပ်ပြီး လိမ်ညာမယ်
+import builtins
+builtins.input = mock_input  # Key တောင်းရင် ဒီ fake key ကို အလိုလို ထည့်ပေးမယ်
+
 try:
+    import requests
+    requests.get = mock_get    # Server ဆီ Key စစ်ရင် Success ပဲ ပြန်ခိုင်းမယ်
+    requests.post = mock_get
+except:
+    pass
+
+# ၃။ core module ကို import လုပ်ပြီး run မယ်
+try:
+    print("\033[1;32m[+] Patching Ruijie Protection...\033[1;00m")
     import core
-except ImportError:
-    print("[!] core.so ကို ရှာမတွေ့ပါ။ ဖိုင်လမ်းကြောင်း မှန်မမှန် စစ်ပါ။")
-    sys.exit()
-
-def bypass():
-    print("\033[1;36m[*] Target: Ruijie Voucher Bypass\033[1;00m")
-    print("\033[1;32m[*] Patching compiled logic...\033[1;00m")
-
-    # Cython module ထဲက variable တွေ သို့မဟုတ် function တွေကို override လုပ်မယ်
-    # အဓိကအားဖြင့် approval စစ်တတ်တဲ့ function နာမည်တွေကို အမြဲ True ပေးလိုက်တာပါ
-    target_hooks = [
-        'check_approval', 'validate_key', 'check_status', 
-        'is_registered', 'auth_check', 'verify'
-    ]
-
-    for hook in target_hooks:
-        if hasattr(core, hook):
-            setattr(core, hook, dummy_true)
-            print(f"\033[1;32m[+] Hooked: {hook}\033[1;00m")
-
-    # ပြဿနာက .so ထဲမှာ Key logic က hardcoded ဖြစ်နေရင် direct function ကိုပဲ ခေါ်ရပါမယ်
+    
+    # .so ထဲမှာ ပါလေ့ရှိတဲ့ variable တွေကို force ပြောင်းမယ်
     try:
-        print("\033[1;33m[*] Attempting to trigger core bypass...\033[1;00m")
-        
-        # main() ကို မခေါ်ခင် လိုအပ်တဲ့ setup တွေကို လုပ်ကြည့်မယ်
-        # Ruijie tool တွေမှာ များသောအားဖြင့် start_process() သို့မဟုတ် execute() ပါတတ်ပါတယ်
-        
-        if hasattr(core, 'start_process'):
-            core.start_process()
-        elif hasattr(core, 'execute'):
-            core.execute()
-        else:
-            # တကယ်လို့ ဘာမှမရှိရင် main() ကိုပဲ Patch လုပ်ထားတဲ့ function တွေနဲ့ run မယ်
-            core.main()
-            
-    except Exception as e:
-        print(f"\033[1;31m[!] Execution Error: {e}\033[1;00m")
+        core.authorized = True
+        core.status = "VERIFIED"
+    except:
+        pass
 
-if __name__ == "__main__":
+    print("\033[1;32m[+] Attempting to launch core...\033[1;00m")
+    
+    # core.main() ထဲမှာ logic အကုန်ရှိနေတာမို့ သူ့ကိုပဲ ခေါ်ရမှာပါ
+    core.main()
+
+except KeyboardInterrupt:
+    print("\n\033[1;31m[!] Stopped.\033[1;00m")
+except Exception as e:
+    # တကယ်လို့ core.main() က attribute error တက်ရင် core.start_process() စမ်းပါ
     try:
-        bypass()
-    except KeyboardInterrupt:
-        print("\n\033[1;31m[!] Stopped.\033[1;00m")
+        core.start_process()
+    except:
+        print(f"\033[1;31m[!] Error: {e}\033[1;00m")

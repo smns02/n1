@@ -1,27 +1,23 @@
-import core
+import Sell
 import sys
 
-def run_obfuscated():
-    print("\033[1;32m[+] Starting Patched Core System...\033[1;00m")
+# ရှာတွေ့သမျှ check_key နာမည်အသစ်တွေကို ဒီမှာ dummy ပေးထားပါ
+# (ဥပမာ - နာမည် ၃ နေရာတွေ့ရင် ၃ ခုလုံးကို override လုပ်ပါမယ်)
+def bypass_setup():
+    dummy = lambda *a, **k: True
     
-    try:
-        # core.main() ကို run မယ်။ key စစ်တဲ့ function ကို နာမည်ဖျက်ထားလို့ 
-        # သူက ရှာမတွေ့တော့ဘဲ error တက်ပါလိမ့်မယ်။
-        core.main()
-    except AttributeError as e:
-        # ရှာမတွေ့တဲ့ function (ဥပမာ check_approvxx) ကို 
-        # ဘာမှမလုပ်တဲ့ dummy function တစ်ခုအဖြစ် သတ်မှတ်ပေးလိုက်တာပါ
-        missing_attr = str(e).split("'")[-2]
-        print(f"\033[1;33m[*] Bypassing: {missing_attr}\033[1;00m")
-        setattr(core, missing_attr, lambda *args, **kwargs: True)
-        
-        # Function အသစ်နဲ့ ပြန် run မယ်
-        try:
-            core.main()
-        except:
-            pass
-    except Exception as e:
-        print(f"[!] Error: {e}")
+    # Sell module ထဲမှာရှိတဲ့ function တွေကို စစ်ထုတ်ပြီး auto-patch လုပ်တာပါ
+    for attr in dir(Sell):
+        if "check_k" in attr:  # သင်ပြောင်းလိုက်တဲ့ နာမည်အစနဲ့ တိုက်စစ်ပါ
+            setattr(Sell, attr, dummy)
+            print(f"[*] Patched internal function: {attr}")
 
 if __name__ == "__main__":
-    run_obfuscated()
+    bypass_setup()
+    print("[+] Launching Sell Tool with patches...")
+    try:
+        # main loop ကို စခိုင်းပါမယ်
+        # dir(Sell) ထဲမှာ main() မပါရင် အခြား function တစ်ခုခုကို ခေါ်ကြည့်ပါ
+        Sell.main() 
+    except Exception as e:
+        print(f"[!] Error: {e}")

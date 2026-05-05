@@ -1,34 +1,36 @@
-import asyncio
+import os
 import sys
-import sky
 
-async def main():
-    """
-    Key စစ်ဆေးခြင်း အဆင့်များကို ကျော်ဖြတ်ပြီး 
-    Core function ဖြစ်သော InternetAccess ကို တိုက်ရိုက် run သည့် Main function
-    """
-    try:
-        # Device ID သို့မဟုတ် System Key ယူသည့် အပိုင်း (လိုအပ်လျှင်)
-        # ၎င်းသည် Key တောင်းခြင်းမဟုတ်ဘဲ System Identity အတွက်ဖြစ်နိုင်သဖြင့် ထားခဲ့ပါမည်
-        try:
-            device_id = sky.get_system_key()
-        except Exception:
-            pass
+# ၁။ လိုအပ်တဲ့ Library ရှိမရှိ အရင်စစ်မယ်
+try:
+    import requests
+except ImportError:
+    print("[*] Installing requests library...")
+    os.system("pip install requests")
+    import requests
 
-        print("\033[1;32m[+] Bypassing authentication...\033[1;00m")
-        print("\033[1;32m[+] Starting Internet Access Engine...\033[1;00m")
+# ၂။ .so ဖိုင်ကို Import လုပ်မယ်
+try:
+    import device34Neko
+except ImportError as e:
+    print(f"\n[!] Error: .so ဖိုင်ကို Import လုပ်လို့မရပါ။")
+    sys.exit()
 
-        # Key validation system ကို ကျော်ပြီး execute လုပ်ခြင်း
-        bypass_engine = sky.InternetAccess() 
-        await bypass_engine.execute()
-
-    except Exception as e:
-        print(f"\033[1;31m[!] Error: {e}\033[1;00m")
-
+# ၃။ အစီအစဉ်ကို စတင်မယ်
 if __name__ == "__main__":
     try:
-        # Low-end device များပါ အဆင်ပြေစေရန် loop ကို တိုက်ရိုက် run ခြင်း
-        asyncio.run(main())
+        print("\033[1;32m[+] Bypassing Key System...\033[1;00m")
+        
+        # device34Neko.check_approval() ကို ကျော်ပြီး 
+        # Bypass လုပ်တဲ့ function ကို တိုက်ရိုက်ခေါ်ပါမယ်
+        
+        try:
+            # Key စစ်တဲ့ function ကို မခေါ်တော့ဘဲ အလုပ်လုပ်မယ့် function ကို တန်းခေါ်ခြင်း
+            device34Neko.start_bypass()
+            
+        except Exception as e:
+            print(f"[!] တိုက်ရိုက် Run ရာတွင် အဆင်မပြေပါ: {e}")
+            
     except KeyboardInterrupt:
-        print("\n\033[1;31m[!] Stopped by user.\033[1;00m")
+        print("\n[!] အစီအစဉ်ကို ရပ်ဆိုင်းလိုက်ပါပြီ။")
         sys.exit()
